@@ -1,6 +1,6 @@
 from setuptools import setup
 
-packages = ['rdb_session']
+packages = ['rethindb_session']
 
 
 setup(
@@ -17,6 +17,7 @@ setup(
     zip_safe=False,
     install_requires=['rethinkdb>=1.7.0'],
     include_package_data=True,
+    test_suite="tests",
     classifiers=[
         "Programming Language :: Python :: 2",
         "Framework :: Django",
