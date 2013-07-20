@@ -40,7 +40,13 @@ class SessionStore(SessionBase):
     """
       A method to check if the session exists in the database
     """
-    return (rethinkdb_handler.get(session_key).run(conn)) is not None
+    key_found     = rethinkdb_handler.get(session_key).run(conn)
+    reference_time  = time.mktime(timezone.now().timetuple())
+
+    if not key_found or key_found["expire"] < reference_time:
+      return False
+
+    return True
 
   def create(self):
     """

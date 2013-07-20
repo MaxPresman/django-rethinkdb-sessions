@@ -1,79 +1,83 @@
 import unittest
+import time
 from rethindb_session import main
 from django.contrib.sessions.backends.base import CreateError
 
-'''
-  Tests were inspired by django-redis-session at
-  https://github.com/martinrusev/django-redis-sessions/blob/master/tests/tests.py
-''' 
 
 class TestSequenceFunctions(unittest.TestCase):
 
-  def test_modify_and_keys(self):
-    rtdb_instance = main.SessionStore()
+  ##on each test run.. setup the connection
+  def setUp(self):
+    ''' init the storage engine '''
+    self.rtdb_instance = main.SessionStore()
 
-    self.assertFalse(rtdb_instance.modified)
-    rtdb_instance['test'] = 'test_me'
-    self.assertTrue(rtdb_instance.modified)
-    self.assertEquals(rtdb_instance['test'], 'test_me')
+  def test_modify_and_keys(self):
+    self.assertFalse(self.rtdb_instance.modified)
+    self.rtdb_instance['test'] = 'test_me'
+    self.assertTrue(self.rtdb_instance.modified)
+    self.assertEquals(self.rtdb_instance['test'], 'test_me')
 
   """
     simple test to create a key
   """
   def test_save_and_delete(self):
-    rtdb_instance = main.SessionStore()
-    rtdb_instance["key"] = "value"
-    rtdb_instance.save()
+    self.rtdb_instance["key"] = "value"
+    self.rtdb_instance.save()
 
     ## test implicit
-    self.assertTrue(rtdb_instance.exists(rtdb_instance.session_key))
-    rtdb_instance.delete()
-    self.assertFalse(rtdb_instance.exists(rtdb_instance.session_key))
+    self.assertTrue(self.rtdb_instance.exists(self.rtdb_instance.session_key))
+    self.rtdb_instance.delete()
+    self.assertFalse(self.rtdb_instance.exists(self.rtdb_instance.session_key))
 
   def test_save_and_delete_exp(self):
-    rtdb_instance = main.SessionStore()
-    rtdb_instance["key"] = "value"
-    rtdb_instance.save()  
+    self.rtdb_instance["key"] = "value"
+    self.rtdb_instance.save()  
 
     ## test implicit
-    self.assertTrue(rtdb_instance.exists(rtdb_instance.session_key))
-    rtdb_instance.delete(rtdb_instance.session_key)
-    self.assertFalse(rtdb_instance.exists(rtdb_instance.session_key))
+    self.assertTrue(self.rtdb_instance.exists(self.rtdb_instance.session_key))
+    self.rtdb_instance.delete(self.rtdb_instance.session_key)
+    self.assertFalse(self.rtdb_instance.exists(self.rtdb_instance.session_key))
 
   def test_save_twice(self):
-    rtdb_instance = main.SessionStore()
-    rtdb_instance["key"] = "value"
-    rtdb_instance.save()
+    self.rtdb_instance["key"] = "value"
+    self.rtdb_instance.save()
 
-    rtdb_instance["key2"] = "value2"
-    rtdb_instance.save()
+    self.rtdb_instance["key2"] = "value2"
+    self.rtdb_instance.save()
 
   def test_flush(self):
-    rtdb_instance = main.SessionStore()
-
-    rtdb_instance['key'] = 'another_value'
-    rtdb_instance.save()
-    key = rtdb_instance.session_key
-    rtdb_instance.flush()
-    self.assertFalse(rtdb_instance.exists(key))
+    self.rtdb_instance['key'] = 'another_value'
+    self.rtdb_instance.save()
+    key = self.rtdb_instance.session_key
+    self.rtdb_instance.flush()
+    self.assertFalse(self.rtdb_instance.exists(key))
 
   def test_load(self):
-    rtdb_instance = main.SessionStore()
-    rtdb_instance['key'] = 'another_value'
-    rtdb_instance.save()
+    self.rtdb_instance['key'] = 'another_value'
+    self.rtdb_instance.save()
 
-    test_key = rtdb_instance.session_key
+    test_key = self.rtdb_instance.session_key
 
-    rtdb_instance = main.SessionStore(test_key)
+    self.rtdb_instance = main.SessionStore(test_key)
     
-    self.assertIn("key",rtdb_instance)
+    self.assertIn("key",self.rtdb_instance)
 
   def test_upsert_false(self):
-    rtdb_instance = main.SessionStore()
-    rtdb_instance['key'] = 'another_value'
-    rtdb_instance.save()
+    self.rtdb_instance['key'] = 'another_value'
+    self.rtdb_instance.save()
 
-    self.assertRaises(CreateError,rtdb_instance.save,must_create=True)
+    self.assertRaises(CreateError,self.rtdb_instance.save,must_create=True)
+
+  def test_expire(self):
+    self.rtdb_instance.set_expiry(1)
+    # Test if the expiry age is set correctly
+    self.assertEquals(self.rtdb_instance.get_expiry_age(), 1)
+    self.rtdb_instance['key'] = 'expiring_value'
+    self.rtdb_instance.save()
+    key = self.rtdb_instance.session_key
+    self.assertEquals(self.rtdb_instance.exists(key), True)
+    time.sleep(2)
+    self.assertEquals(self.rtdb_instance.exists(key), False)
 
 if __name__ == '__main__':
     unittest.main()
