@@ -17,8 +17,9 @@ class SessionStore(SessionBase):
   def __init__(self, session_key=None):
     super(SessionStore, self).__init__(session_key)
 
-    self.rtdb_table_handle = rethinkdb.table(SESSION_RETHINK_TABLE)
+    self.table_handle = rethinkdb.table(SESSION_RETHINK_TABLE)
 
+  @classmethod
   def __establish_rethinkdb(self):
     return rethinkdb.connect(host=SESSION_RETHINK_HOST,
                               db=SESSION_RETHINK_DB,
@@ -26,10 +27,10 @@ class SessionStore(SessionBase):
                             )
 
   def load(self):
-    rethinkdb_conn     = self.__establish_rethinkdb_conn()
+    rethinkdb_conn     = self.__establish_rethinkdb()
 
     reference_time     = time.mktime(timezone.now().timetuple())
-    session_query      = self.rtdb_table_handle.get(self.session_key)
+    session_query      = self.table_handle.get(self.session_key)
     session_result     = session_query.run(rethinkdb_conn)
 
     if not session_result or session_result["expire"] < reference_time:
@@ -44,7 +45,7 @@ class SessionStore(SessionBase):
       A method to check if the session exists in the database
     """
     rethinkdb_handler = self.__establish_rethinkdb()
-    key_found         = rethinkdb_handler.get(session_key).run(conn)
+    key_found         = self.table_handle.get(session_key).run(rethinkdb_handler)
     reference_time    = time.mktime(timezone.now().timetuple())
 
     if not key_found or key_found["expire"] < reference_time:
@@ -91,7 +92,7 @@ class SessionStore(SessionBase):
       "expire": time.mktime(self.get_expiry_date().timetuple())  ##keep track of when this entry is expiring
     }
 
-    insert_result = rethinkdb_handler.insert(data_set,upsert=upsert_setting).run(conn)
+    insert_result = self.table_handle.insert(data_set,upsert=upsert_setting).run(rethinkdb_handler)
 
     if "errors" in insert_result and insert_result["errors"]:
       raise CreateError
@@ -110,18 +111,18 @@ class SessionStore(SessionBase):
 
       session_key = self.session_key
 
-    rethinkdb_handler.get(session_key).delete().run(conn)
+    self.table_handle.get(session_key).delete().run(rethinkdb_handler)
 
   @classmethod
   def clear_expired(cls):
     """
       A method to remove all expired sessions
     """
-    rethinkdb_handler  = self.__establish_rethinkdb()
-    reference_time = time.mktime(self.timezone.now().timetuple())
+    rethinkdb_handler  = cls.__establish_rethinkdb()
+    reference_time = time.mktime(timezone.now().timetuple())
 
-    delete_request = rethinkdb.table(r_table).filter(rethinkdb.row["expire"] < reference_time).delete()
-    delete_result  = delete_request.run(conn)
+    delete_request = rethinkdb.table(SESSION_RETHINK_TABLE).filter(rethinkdb.row["expire"] < reference_time).delete()
+    delete_result  = delete_request.run(rethinkdb_handler)
 
     ##print delete_result
 
