@@ -1,7 +1,7 @@
 from setuptools import setup
 from rethinkdb_sessions import __version__
 
-packages = ['rethindb_session']
+packages = ['rethinkdb_sessions']
 
 
 setup(
