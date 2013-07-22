@@ -1,14 +1,16 @@
 from setuptools import setup
 from rethinkdb_sessions import __version__
 
+import os
+
 packages = ['rethinkdb_sessions']
 
 
 setup(
     name='django-rethinkdb-sessions',
     version=__version__,
-    description= "123",
-    long_description="1234",
+    description= "rethinkdb backed sessions for django",
+    long_description=open(os.path.join(os.path.dirname(__file__), "README.rst")).read() ,
     keywords='',
     author='Max Presman',
     author_email='max@presman.ca',
