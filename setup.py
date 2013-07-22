@@ -22,7 +22,10 @@ setup(
     include_package_data=True,
     test_suite="tests",
     classifiers=[
-        "Programming Language :: Python :: 2",
+        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python :: 2.7",
         "Framework :: Django",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License"
     ],
 )
