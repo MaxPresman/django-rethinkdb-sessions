@@ -1,8 +1,15 @@
 import unittest
 import time
-from rethindb_session import main
 from django.contrib.sessions.backends.base import CreateError
+from django.conf import settings
 
+## on tests.. configure the settings manuall
+settings.configure(
+    SESSION_ENGINE='rdb_session.main'
+)
+####
+
+from rethindb_session import main
 
 class TestSequenceFunctions(unittest.TestCase):
 

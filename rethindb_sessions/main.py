@@ -4,8 +4,6 @@ from django.contrib.sessions.backends.base import SessionBase,CreateError
 from django.utils import timezone
 import time
 
-settings.configure()
-
 ##push defaults
 SESSION_RETHINK_HOST  = getattr(settings, 'SESSION_RETHINK_HOST', 'localhost')
 SESSION_RETHINK_PORT  = getattr(settings, 'SESSION_RETHINK_PORT', '28015')
@@ -14,20 +12,25 @@ SESSION_RETHINK_TABLE = getattr(settings, 'SESSION_RETHINK_TABLE', 'sessions')
 SESSION_RETHINK_AUTH  = getattr(settings, 'SESSION_RETHINK_AUTH', '')
 ##
 
-##create a rethinkdb backend connection and db,table shortcut
-conn              = rethinkdb.connect(host=SESSION_RETHINK_HOST,db=SESSION_RETHINK_DB,auth_key=SESSION_RETHINK_AUTH)
-rethinkdb_handler = rethinkdb.table(SESSION_RETHINK_TABLE)
-
 
 class SessionStore(SessionBase):
   def __init__(self, session_key=None):
     super(SessionStore, self).__init__(session_key)
 
+    self.rtdb_table_handle = rethinkdb.table(SESSION_RETHINK_TABLE)
+
+  def __establish_rethinkdb(self):
+    return rethinkdb.connect(host=SESSION_RETHINK_HOST,
+                              db=SESSION_RETHINK_DB,
+                              auth_key=SESSION_RETHINK_AUTH
+                            )
 
   def load(self):
+    rethinkdb_conn     = self.__establish_rethinkdb_conn()
+
     reference_time     = time.mktime(timezone.now().timetuple())
-    session_query      = rethinkdb_handler.get(self.session_key)
-    session_result     = session_query.run(conn)
+    session_query      = self.rtdb_table_handle.get(self.session_key)
+    session_result     = session_query.run(rethinkdb_conn)
 
     if not session_result or session_result["expire"] < reference_time:
       self.create()
@@ -40,8 +43,9 @@ class SessionStore(SessionBase):
     """
       A method to check if the session exists in the database
     """
-    key_found     = rethinkdb_handler.get(session_key).run(conn)
-    reference_time  = time.mktime(timezone.now().timetuple())
+    rethinkdb_handler = self.__establish_rethinkdb()
+    key_found         = rethinkdb_handler.get(session_key).run(conn)
+    reference_time    = time.mktime(timezone.now().timetuple())
 
     if not key_found or key_found["expire"] < reference_time:
       return False
@@ -70,6 +74,7 @@ class SessionStore(SessionBase):
     On session save, check if the key exists, if the key exists and must_create, we error out
     else, we encode the data and update the hash
     """
+    rethinkdb_handler  = self.__establish_rethinkdb()
 
     ##if we are not in must_create, we can instruct rethink to update the key
     if must_create and self.exists(self._get_or_create_session_key()):
@@ -97,6 +102,7 @@ class SessionStore(SessionBase):
     """
       delete the supplied session_key or if that is not present, delete the global session_key
     """
+    rethinkdb_handler  = self.__establish_rethinkdb()
 
     if session_key is None:
       if self.session_key is None:
@@ -111,6 +117,7 @@ class SessionStore(SessionBase):
     """
       A method to remove all expired sessions
     """
+    rethinkdb_handler  = self.__establish_rethinkdb()
     reference_time = time.mktime(self.timezone.now().timetuple())
 
     delete_request = rethinkdb.table(r_table).filter(rethinkdb.row["expire"] < reference_time).delete()

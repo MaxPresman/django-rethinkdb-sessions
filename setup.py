@@ -1,11 +1,12 @@
 from setuptools import setup
+from rethinkdb_sessions import __version__
 
 packages = ['rethindb_session']
 
 
 setup(
     name='django-rethinkdb-sessions',
-    version="0.0.1",
+    version=__version__,
     description= "123",
     long_description="1234",
     keywords='',
