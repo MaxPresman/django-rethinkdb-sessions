@@ -7,8 +7,8 @@ import time
 ##push defaults
 SESSION_RETHINK_HOST  = getattr(settings, 'SESSION_RETHINK_HOST', 'localhost')
 SESSION_RETHINK_PORT  = getattr(settings, 'SESSION_RETHINK_PORT', '28015')
-SESSION_RETHINK_DB    = getattr(settings, 'SESSION_RETHINK_DB', 'test')
-SESSION_RETHINK_TABLE = getattr(settings, 'SESSION_RETHINK_TABLE', 'django_sessions')
+SESSION_RETHINK_DB    = getattr(settings, 'SESSION_RETHINK_DB', 'rdb_session')
+SESSION_RETHINK_TABLE = getattr(settings, 'SESSION_RETHINK_TABLE', 'sessions')
 SESSION_RETHINK_AUTH  = getattr(settings, 'SESSION_RETHINK_AUTH', '')
 ##
 
@@ -21,21 +21,10 @@ class SessionStore(SessionBase):
 
   @classmethod
   def __establish_rethinkdb(self):
-    connection_handler = rethinkdb.connect(host=SESSION_RETHINK_HOST,
+    return rethinkdb.connect(host=SESSION_RETHINK_HOST,
                               db=SESSION_RETHINK_DB,
                               auth_key=SESSION_RETHINK_AUTH
                             )
-
-
-    ##create the requested db if it does not exist
-    if SESSION_RETHINK_DB not in rethinkdb.db_list().run(connection_handler):
-      rethinkdb.db_create(SESSION_RETHINK_DB).run(connection_handler)
-
-    ##create the required table if it does not exist
-    if SESSION_RETHINK_TABLE not in rethinkdb.db(SESSION_RETHINK_DB).table_list().run(connection_handler):
-      rethinkdb.db(SESSION_RETHINK_DB).table_create(SESSION_RETHINK_TABLE).run(connection_handler)
-
-    return connection_handler
 
   def load(self):
     rethinkdb_conn     = self.__establish_rethinkdb()
