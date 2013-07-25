@@ -5,11 +5,11 @@ from django.conf import settings
 
 ## on tests.. configure the settings manuall
 settings.configure(
-    SESSION_ENGINE='rdb_session.main'
+    SESSION_ENGINE='rethinkdb_sessions.main'
 )
 ####
 
-from rethindb_session import main
+from rethinkdb_sessions import main
 
 class TestSequenceFunctions(unittest.TestCase):
 
@@ -85,6 +85,20 @@ class TestSequenceFunctions(unittest.TestCase):
     self.assertEquals(self.rtdb_instance.exists(key), True)
     time.sleep(2)
     self.assertEquals(self.rtdb_instance.exists(key), False)
+
+  def test_expire_cleanup(self):
+    self.rtdb_instance.set_expiry(1)
+    # Test if the expiry age is set correctly
+    self.assertEquals(self.rtdb_instance.get_expiry_age(), 1)
+    self.rtdb_instance['key'] = 'expiring_value'
+    self.rtdb_instance.save()
+    key = self.rtdb_instance.session_key   
+
+    self.assertEquals(self.rtdb_instance.exists(key), True)
+    time.sleep(2)
+    main.SessionStore.clear_expired()
+    self.assertEquals(self.rtdb_instance.exists(key), False)
+    
 
 if __name__ == '__main__':
     unittest.main()
