@@ -14,6 +14,7 @@ env:
   - DJANGO=1.4
 
 install:
+  - pip install -q Django==$DJANGO --use-mirrors
   - pip install . --use-mirrors
 
 before_script: rethinkdb --daemon
