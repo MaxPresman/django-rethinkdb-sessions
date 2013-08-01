@@ -10,7 +10,7 @@ before_install:
 env:
   - TOXENV=py26-1.4,py26-1.5
   - TOXENV=py27-1.4,py27-1.5
-  - TOXENV=pyp-1.5
+  - TOXENV=pypy-1.5
 
 install:
   - pip install tox
