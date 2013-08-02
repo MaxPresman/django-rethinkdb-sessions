@@ -2,6 +2,7 @@ django-rethinkdb-sessions
 =========================
 
 .. image:: https://travis-ci.org/MaxPresman/django-rethinkdb-sessions.png
+   :target: https://travis-ci.org/MaxPresman/django-rethinkdb-sessions
 
 
 Django session backend for rethinkdb.
