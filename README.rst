@@ -1,5 +1,8 @@
-django-rethinkdb-sessions
+django-rethinkdb-sessions 
 =========================
+
+.. image:: https://travis-ci.org/MaxPresman/django-rethinkdb-sessions.png
+
 
 Django session backend for rethinkdb.
 
@@ -24,5 +27,4 @@ Running Tests
 
 Tests are included, invoke tests by running
     "python tests/tests.py"
-
 

@@ -67,7 +67,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
     self.rtdb_instance = main.SessionStore(test_key)
     
-    self.assertIn("key",self.rtdb_instance)
+    self.assertTrue("key" in self.rtdb_instance)
 
   def test_upsert_false(self):
     self.rtdb_instance['key'] = 'another_value'
